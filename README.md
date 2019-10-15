@@ -22,6 +22,15 @@ You can use the `--limit` flag to limit the number of cryptocurrencies is shown 
 ```shell script
 $ ./bin/hodl --limit 20
 ```
+### Limit coin(s)
+You can use the `--currency` flag to get prices converted to another currency.
+
+The default currency is USD and it supports AUD, BRL, CAD, CHF, CLP, CNY,
+CZK, DKK, EUR, GBP, HKD, HUF, IDR, ILS, INR, JPY, KRW, MXN, MYR, NOK,
+NZD, PHP, PKR, PLN, RUB, SEK, SGD, THB, TRY, TWD, ZAR.
+```shell script
+$ ./bin/hodl --currency EUR
+```
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE) file for details

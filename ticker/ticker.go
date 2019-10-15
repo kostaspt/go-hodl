@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -26,8 +27,8 @@ type Ticker struct {
 }
 
 type requestParams struct {
-	Limit   int
-	Convert string
+	Limit    int
+	Currency string
 }
 
 type record struct {
@@ -40,8 +41,8 @@ type record struct {
 	MarketCap float64
 }
 
-func New(limit int, convert string) *Ticker {
-	params := initParams(limit, convert)
+func New(limit int, currency string) *Ticker {
+	params := initParams(limit, currency)
 	apiUrl := generateUrl(params)
 	return &Ticker{
 		ApiUrl: apiUrl,
@@ -55,13 +56,16 @@ func (t *Ticker) UpdateData() {
 	defer respBody.Close()
 	_ = json.NewDecoder(respBody).Decode(&respItems)
 
+	priceKey := "price_"+strings.ToLower(t.Params.Currency)
+	marketCapKey := "market_cap_"+strings.ToLower(t.Params.Currency)
+
 	t.Records = nil
 	for _, item := range respItems {
-		price, _ := strconv.ParseFloat(item["price_usd"].(string), 64)
+		price, _ := strconv.ParseFloat(item[priceKey].(string), 64)
 		change1h, _ := strconv.ParseFloat(item["percent_change_1h"].(string), 64)
 		change24h, _ := strconv.ParseFloat(item["percent_change_24h"].(string), 64)
 		change7d, _ := strconv.ParseFloat(item["percent_change_7d"].(string), 64)
-		marketCap, _ := strconv.ParseFloat(item["market_cap_usd"].(string), 64)
+		marketCap, _ := strconv.ParseFloat(item[marketCapKey].(string), 64)
 		r := record{
 			Rank:      item["rank"].(string),
 			Coin:      item["symbol"].(string),
@@ -90,11 +94,11 @@ func (t *Ticker) PrintTable() {
 		Cells: []*simpletable.Cell{
 			{Align: simpletable.AlignCenter, Text: "Rank"},
 			{Align: simpletable.AlignCenter, Text: "Coin"},
-			{Align: simpletable.AlignCenter, Text: "Price (USD)"},
+			{Align: simpletable.AlignCenter, Text: "Price (" + strings.ToUpper(t.Params.Currency) + ")"},
 			{Align: simpletable.AlignCenter, Text: "Change 1H"},
 			{Align: simpletable.AlignCenter, Text: "Change 24H"},
 			{Align: simpletable.AlignCenter, Text: "Change 7D"},
-			{Align: simpletable.AlignCenter, Text: "Market Cap (USD)"},
+			{Align: simpletable.AlignCenter, Text: "Market Cap (" + strings.ToUpper(t.Params.Currency) + ")"},
 		},
 	}
 
@@ -116,16 +120,16 @@ func (t *Ticker) PrintTable() {
 	fmt.Println(table.String())
 }
 
-func initParams(limit int, convert string) requestParams {
+func initParams(limit int, currency string) requestParams {
 	if limit == 0 {
 		limit = 10
 	}
-	if convert == "" {
-		convert = "USD"
+	if currency == "" {
+		currency = "USD"
 	}
 	return requestParams{
-		Limit:   limit,
-		Convert: convert,
+		Limit:    limit,
+		Currency: currency,
 	}
 }
 
@@ -133,7 +137,7 @@ func generateUrl(params requestParams) *url.URL {
 	u, _ := url.Parse("https://api.coinmarketcap.com/v1/ticker")
 	q := u.Query()
 	q.Set("limit", strconv.Itoa(params.Limit))
-	q.Set("convert", params.Convert)
+	q.Set("convert", params.Currency)
 	u.RawQuery = q.Encode()
 	return u
 }
