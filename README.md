@@ -16,5 +16,12 @@ To check the top 10 cryptocurrencies, run:
 $ ./bin/hodl
 ```
 
+## Options
+### Limit coin(s)
+You can use the `--limit` flag to limit the number of cryptocurrencies is shown according to the CoinMarketCap ranking.
+```shell script
+$ ./bin/hodl --limit 20
+```
+
 ## License
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE) file for details
