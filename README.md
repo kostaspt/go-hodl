@@ -18,17 +18,19 @@ $ ./bin/hodl
 
 ## Options
 ### Limit coin(s)
-You can use the `--limit` flag to limit the number of cryptocurrencies is shown according to the CoinMarketCap ranking.
+You can use the `-l` (or `--limit`) flag to limit the number of cryptocurrencies is shown according to the CoinMarketCap ranking.
 ```shell script
+$ ./bin/hodl -l 20
 $ ./bin/hodl --limit 20
 ```
 ### Limit coin(s)
-You can use the `--currency` flag to get prices converted to another currency.
+You can use the `-c` (or `--currency`) flag to get prices converted to another currency.
 
 The default currency is USD and it supports AUD, BRL, CAD, CHF, CLP, CNY,
 CZK, DKK, EUR, GBP, HKD, HUF, IDR, ILS, INR, JPY, KRW, MXN, MYR, NOK,
 NZD, PHP, PKR, PLN, RUB, SEK, SGD, THB, TRY, TWD, ZAR.
 ```shell script
+$ ./bin/hodl -c EUR
 $ ./bin/hodl --currency EUR
 ```
 
