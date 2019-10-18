@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -29,6 +30,7 @@ type Ticker struct {
 type requestParams struct {
 	Limit    int
 	Currency string
+	Filters  []string
 }
 
 type record struct {
@@ -41,8 +43,7 @@ type record struct {
 	MarketCap float64
 }
 
-func New(limit int, currency string) *Ticker {
-	params := initParams(limit, currency)
+func New(params requestParams) *Ticker {
 	apiUrl := generateUrl(params)
 	return &Ticker{
 		ApiUrl: apiUrl,
@@ -56,11 +57,25 @@ func (t *Ticker) UpdateData() {
 	defer respBody.Close()
 	_ = json.NewDecoder(respBody).Decode(&respItems)
 
-	priceKey := "price_"+strings.ToLower(t.Params.Currency)
-	marketCapKey := "market_cap_"+strings.ToLower(t.Params.Currency)
+	priceKey := "price_" + strings.ToLower(t.Params.Currency)
+	marketCapKey := "market_cap_" + strings.ToLower(t.Params.Currency)
 
+	var found bool
 	t.Records = nil
 	for _, item := range respItems {
+		if len(t.Params.Filters) > 0 {
+			found = false
+			for _, coin := range t.Params.Filters {
+				if coin == strings.ToLower(item["symbol"].(string)) {
+					found = true
+				}
+			}
+
+			if found == false {
+				continue
+			}
+		}
+
 		price, _ := strconv.ParseFloat(item[priceKey].(string), 64)
 		change1h, _ := strconv.ParseFloat(item["percent_change_1h"].(string), 64)
 		change24h, _ := strconv.ParseFloat(item["percent_change_24h"].(string), 64)
@@ -120,16 +135,32 @@ func (t *Ticker) PrintTable() {
 	fmt.Println(table.String())
 }
 
-func initParams(limit int, currency string) requestParams {
-	if limit == 0 {
+func InitParams(limit int, currency string, filter string) requestParams {
+	// Parse limit
+	if limit <= 0 {
 		limit = 10
 	}
+
+	// Parse currency
 	if currency == "" {
-		currency = "USD"
+		currency = "usd"
+	} else {
+		currency = strings.ToLower(strings.TrimSpace(currency))
 	}
+
+	// Parse filter
+	var filtersParsed []string
+	if filter != "" {
+		filtersParsed = regexp.MustCompile("\\W*,\\W*").Split(filter, 2)
+		for i := range filtersParsed {
+			filtersParsed[i] = strings.ToLower(strings.TrimSpace(filtersParsed[i]))
+		}
+	}
+
 	return requestParams{
 		Limit:    limit,
 		Currency: currency,
+		Filters:  filtersParsed,
 	}
 }
 
